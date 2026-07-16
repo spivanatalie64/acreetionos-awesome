@@ -1,0 +1,16 @@
+name: Mirror to GitLab
+
+on: [push]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: peaceiris/actions-mirror-action@v1
+        with:
+          ssh_private_key: ${{ secrets.GITLAB_SSH_KEY }}
+          known_hosts: ${{ secrets.GITLAB_KNOWN_HOSTS }}
+          destination_repo: "ssh://git@gitlab.acreetionos.org:2499/acreetionos-code/${{ github.event.repository.name }}.git"
