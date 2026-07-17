@@ -1,0 +1,39 @@
+name: Build ISO
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 6 */7 * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    timeout-minutes: 180
+    steps:
+      - name: Install deps
+        run: |
+          pacman -Sy --noconfirm archlinux-keyring
+          pacman -S --noconfirm --needed archiso squashfs-tools dosfstools erofs-utils mtools xorriso libarchive grub edk2-shell git
+      - uses: actions/checkout@v4
+      - name: Build ISO
+        run: |
+          chmod +x build.sh
+          ./build.sh 2>&1
+      - name: Checksums
+        run: |
+          for f in out/*.iso; do
+            [ -f "$f" ] || continue
+            sha256sum "$f" >> SHA256SUMS
+          done
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: acreetionos-iso
+          path: out/*.iso
+          retention-days: 7
